@@ -1,19 +1,37 @@
 const Technology = require('../models/techModel');
 
+const getTech = async (req, res) => {
+    const tech_info = await Technology.find();
+
+    res.status(200).json(tech_info)
+
+}
+
 const addTech = async (req, res) => {
     try {
-        const { name, resources, status } = req.body;
+        const { name, status } = req.body;
         const imageUrl = req.file.path;
+        let resources = req.body.resources || []
+        // if (Array.isArray(req.body.resources)) {
+        //     resources = req.body.resources.map((resource) => {
+        //         { link: resource };
+        //     });
+        // } else if (req.body.resources) {
+        //     const resourcesLinks = req.body.resources.split(',');
+        //     resources = resourcesLinks.map((resource) => {
+        //         { link: resource.trim() }
+        //     })
+        // }
 
-        // Create a new technology
+
         const technology = new Technology({
             name,
             image: imageUrl,
-            resources: JSON.parse(resources),
+            resources,
             status,
-        });  
-console.log("resources", resources)
-        await  technology.save();
+        });
+        console.log("resources", resources)
+        await technology.save();
 
         res.status(201).json({ message: 'Technology added successfully' });
     } catch (error) {
@@ -23,4 +41,4 @@ console.log("resources", resources)
 };
 
 
-module.exports = { addTech }
+module.exports = { getTech, addTech }

@@ -20,4 +20,4 @@ const empSchema = mongoose.Schema({
 },
     { timestamps: true })
 
-module.exports = mongoose.model("User_info:", empSchema)
+module.exports = mongoose.model("User", empSchema)

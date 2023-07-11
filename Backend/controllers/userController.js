@@ -42,26 +42,37 @@ const signupUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+
     try {
         const { email, password } = req.body;
+        console.log("password", password)
+
+        if (!email || !password) {
+            res.status(400).json({ error: 'All fields are mandatory!' });
+        }
 
         const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+        if (user && passwordMatch) {
+            const accessToken = jwt.sign(
+                {
+                    user: {
+                        email: user.email,
+                        id: user.id
+                    },
+                }, 'secretKey', { expiresIn: '1m' });
+            res.status(200).json({ accessToken });
+        }
+        else {
+            res.status(401).json({ error: "Email or password is not valid" })
         }
 
-        const token = jwt.sign({ userId: user._id }, 'secretKey', { expiresIn: '1h' });
 
-        res.status(200).json({ Token:token, role: user.role });
     } catch (err) {
         res.status(500).json({ error: 'Failed to authenticate user' });
     }
 }
-
+  
 
 module.exports = { getUser, getUsrById, signupUser, loginUser };

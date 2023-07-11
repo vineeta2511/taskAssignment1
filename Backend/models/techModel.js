@@ -1,19 +1,28 @@
-// Import required modules
+
 const mongoose = require('mongoose');
 
-// Define the Technology schema
+const resourceSchema = new mongoose.Schema({
+  link: {
+    type: String,
+    required: true,
+  },
+});
+
+
 const technologySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
   },
   resources: {
-    type: [String],
-    required: true,
+    type:[resourceSchema],
+    require:true,
   },
   status: {
     type: String,
     required: true,
+    enum: ['Active', 'Inactive'],
+
   },
   image: {
     type: String,

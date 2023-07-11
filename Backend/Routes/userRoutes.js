@@ -8,4 +8,4 @@ userRouter.get('/viewbyid',getUsrById)
 
 userRouter.post('/login',loginUser);
 
-module.exports = {userRouter};
+module.exports = userRouter;

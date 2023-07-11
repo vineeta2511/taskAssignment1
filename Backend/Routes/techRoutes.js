@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const {addTech} = require('../controllers/techController');
+const {addTech, getTech} = require('../controllers/techController');
 
 const techRouter =  express.Router();
 const storage = multer.diskStorage({
@@ -15,6 +15,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage});
 techRouter.post('/addtech',upload.single('image'),addTech);
+techRouter.get('/viewtech',getTech);
 
-module.exports = {techRouter};
+module.exports = techRouter;
 
