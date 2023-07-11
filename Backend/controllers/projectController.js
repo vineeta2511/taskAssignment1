@@ -13,10 +13,13 @@ const transporter = nodemailer.createTransport({
 const addProject = async (req, res) => {
     try {
         const { title, requirements, timeline, startDate, endDate, documents, members, technologyStack } = req.body;
+        if (req.user.role !== 'mentor') {
+            res.status(403).json({ message: 'Only mentors can add projects.' })
+        }
         const createdBy = req.user._id
         console.log(" project_titl", title)
         const project = new Project({
-            title, requirements, timeline, startDate, endDate, documents, members, technologyStack,createdBy
+            title, requirements, timeline, startDate, endDate, documents, members, technologyStack, createdBy
         })
         await project.save();
         const mailSend = {
@@ -46,7 +49,7 @@ const addProject = async (req, res) => {
 
 const listProjects = async (req, res) => {
     try {
-        
+
 
         let projects;
         if (req.user.role === 'mentor') {
@@ -66,4 +69,4 @@ const listProjects = async (req, res) => {
 
 
 
-module.exports = { addProject,listProjects };
+module.exports = { addProject, listProjects };
