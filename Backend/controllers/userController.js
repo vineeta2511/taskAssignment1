@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const bcrypt = require('bcrypt');
+const {generateAccessToken } = require('../middlewares/jwt')
 
 const getUser = async (req, res) => {
     const user_info = await User.find();
@@ -45,34 +45,35 @@ const loginUser = async (req, res) => {
 
     try {
         const { email, password } = req.body;
-        console.log("password", password)
+        //console.log("password", email)
 
         if (!email || !password) {
-            res.status(400).json({ error: 'All fields are mandatory!' });
+            res.status(400).json({ error1: 'All fields are mandatory!' });
         }
 
         const user = await User.findOne({ email });
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (user && passwordMatch) {
-            const accessToken = jwt.sign(
-                {
-                    user: {
-                        email: user.email,
-                        id: user.id
-                    },
-                }, 'secretKey', { expiresIn: '1m' });
-            res.status(200).json({ accessToken });
-        }
-        else {
-            res.status(401).json({ error: "Email or password is not valid" })
+        if (!user) {
+            res.status(401).json({ error2: 'Email or password is not valid' });
         }
 
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        // console.log("user.passwordMatch",user.password);
+
+        if (!passwordMatch) {
+            res.status(401).json({ error3: 'Email or password is not valid' })
+        }
+        
+        const accessToken = await generateAccessToken(user);
+
+        res.status(200).json( {accessToken:accessToken} );
+        console.log("Token:",accessToken);
 
     } catch (err) {
-        res.status(500).json({ error: 'Failed to authenticate user' });
+        res.status(500).json({ Error4: 'Failed to authenticate user' });
     }
 }
-  
+
 
 module.exports = { getUser, getUsrById, signupUser, loginUser };

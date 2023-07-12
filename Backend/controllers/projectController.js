@@ -1,5 +1,6 @@
 const Project = require('../models/projectModel');
 const nodemailer = require('nodemailer');
+const { decodeToken } = require('../middlewares/jwt');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -13,13 +14,21 @@ const transporter = nodemailer.createTransport({
 const addProject = async (req, res) => {
     try {
         const { title, requirements, timeline, startDate, endDate, documents, members, technologyStack } = req.body;
-        if (req.user.role !== 'mentor') {
-            res.status(403).json({ message: 'Only mentors can add projects.' })
+
+        const token = req.headers.authorization;
+
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
         }
-        const createdBy = req.user._id
-        console.log(" project_titl", title)
+        const userRole = decodeToken(token);
+        console.log('User Role:', userRole);
+        if (userRole !== 'mentor') {
+            return res.status(403).json({ message: 'Only mentor can add projects.' })
+        }
+
         const project = new Project({
-            title, requirements, timeline, startDate, endDate, documents, members, technologyStack, createdBy
+            title, requirements, timeline, startDate, endDate, documents, members, technologyStack
+
         })
         await project.save();
         const mailSend = {
@@ -28,7 +37,7 @@ const addProject = async (req, res) => {
             subject: 'New Project Added',
             html: `
             <h1> Project Details <h1>
-            <p>Title:${title}</p>
+            <p>Title:${title}</p>  
             <p>Requirements:${requirements}</p>
             <p>timeline:${timeline}</p>
             <p>Start Date:${startDate}</p>
@@ -38,11 +47,11 @@ const addProject = async (req, res) => {
             `,
         }
 
-        await transporter.semdMail(mailSend)
+        await transporter.sendMail(mailSend)
 
         res.status(201).json({ message: 'Project added Succesfully' });
     } catch (err) {
-        console.log("Error", err);
+        console.log("Error1", err);
         res.status(500).json({ mesaage: 'Internal server error' })
     }
 };
@@ -53,7 +62,7 @@ const listProjects = async (req, res) => {
 
         let projects;
         if (req.user.role === 'mentor') {
-            projects = await Project.find({ cretedBy: req.user._id });
+            projects = await Project.find({ createdBy: req.user._id });
         }
         else if (req.user.role === 'employee') {
             projects = await Project.find({ members: req.user.email });
@@ -69,4 +78,4 @@ const listProjects = async (req, res) => {
 
 
 
-module.exports = { addProject, listProjects };
+module.exports = { addProject, listProjects };  

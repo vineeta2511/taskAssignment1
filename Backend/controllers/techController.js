@@ -27,8 +27,7 @@ const addTech = async (req, res) => {
         const technology = new Technology({
             name,
             image: imageUrl,
-            resources,
-            status,
+            resources,            status,
         });
         console.log("resources", resources)
         await technology.save();
