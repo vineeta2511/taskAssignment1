@@ -1,27 +1,27 @@
 const jwt = require('jsonwebtoken')
-const SECURED_KEY = "what is the Screte Key";
 
-const generateAccessToken = async (user) => {
-    
-    const accessToken = jwt.sign(
-        {
-            user: {
-                email: user.email,
-                role:user.role
+const decodeToken = async (req, res, next) => {
+  try {
 
-            },
-        }, SECURED_KEY, { expiresIn: '1h' });
-
-    return accessToken; 
-}
-
-const decodeToken = (accessToken) => {
-    try {
-      const decoded = jwt.verify(accessToken, SECURED_KEY);
-      return decoded.user.role;
-    } catch (error) {
-      return null;
+    let authHeader = req.headers.Authorization || req.headers.authorization
+    if (!authHeader && !authHeader.startsWith("Bearer")) {
+      res.status(401);
+      throw new Error("Unauthorized");
     }
-  };
 
-module.exports = { generateAccessToken,decodeToken }
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, "SECURED_KEY", (err, decoded) => {
+      if (err) {
+        res.status(401);
+        throw new Error('Unauthorized');
+      }
+      req.user = decoded.user;
+      next();
+    })
+  }
+  catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { decodeToken }

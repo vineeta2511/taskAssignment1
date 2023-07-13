@@ -1,6 +1,6 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
-const {generateAccessToken } = require('../middlewares/jwt')
+const jwt = require('jsonwebtoken');
 
 const getUser = async (req, res) => {
     const user_info = await User.find();
@@ -45,7 +45,7 @@ const loginUser = async (req, res) => {
 
     try {
         const { email, password } = req.body;
-        //console.log("password", email)
+        console.log("password", password)
 
         if (!email || !password) {
             res.status(400).json({ error1: 'All fields are mandatory!' });
@@ -59,21 +59,30 @@ const loginUser = async (req, res) => {
 
         const passwordMatch = await bcrypt.compare(password, user.password);
 
-        // console.log("user.passwordMatch",user.password);
-
         if (!passwordMatch) {
             res.status(401).json({ error3: 'Email or password is not valid' })
         }
-        
-        const accessToken = await generateAccessToken(user);
 
-        res.status(200).json( {accessToken:accessToken} );
-        console.log("Token:",accessToken);
+        const accessToken = jwt.sign(
+            {
+                user: {
+                    id:user._id,
+                    email: user.email,
+                    role: user.role
 
+                },
+            },
+            "SECURED_KEY", { expiresIn: '1h' });
+        res.status(200).json({ accessToken: accessToken });
+        console.log("Token:", accessToken);
     } catch (err) {
         res.status(500).json({ Error4: 'Failed to authenticate user' });
     }
 }
 
+const currentUser = async (req, res) => {
+    res.json(req.user);
+  };
 
-module.exports = { getUser, getUsrById, signupUser, loginUser };
+
+module.exports = { getUser, getUsrById, signupUser, loginUser, currentUser };

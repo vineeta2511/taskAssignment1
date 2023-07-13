@@ -1,11 +1,13 @@
 const express = require('express');
 const userRouter = express.Router();
-const {signupUser,loginUser, getUser, getUsrById}= require('../controllers/userController');
+const { signupUser, loginUser, getUser, getUsrById, currentUser } = require('../controllers/userController');
 
-userRouter.post('/signup',signupUser);
-userRouter.get('/view',getUser);
-userRouter.get('/viewbyid',getUsrById)
+const {decodeToken} = require("../middlewares/jwt")
 
-userRouter.post('/login',loginUser);
-
+userRouter.post('/signup', signupUser);
+userRouter.get('/view', getUser);
+userRouter.get('/viewbyid', getUsrById)
+userRouter.post('/login', loginUser);
+//userRouter.get('/current', decodeToken, currentUser);
+  
 module.exports = userRouter;

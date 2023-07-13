@@ -13,7 +13,7 @@ app.use('/api', techRouter)
 app.use('/api', projectRouter)
 
 connectDb();
-const port = 4000;
+const port = 4002;
 app.listen(port, () =>
     console.log(`Server is running on http://localhost:${port}`)
 )

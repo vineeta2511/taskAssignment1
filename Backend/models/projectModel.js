@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
+
     title: {
         type: String,
         require: true,
@@ -24,11 +25,11 @@ const projectSchema = new mongoose.Schema({
     documents: [String],
     members: [String],
     technologyStack: [String],
-    // createdBy: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'User',
-    //     required: true,
-    // },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
 })
 
 const Project = mongoose.model('Project', projectSchema);
