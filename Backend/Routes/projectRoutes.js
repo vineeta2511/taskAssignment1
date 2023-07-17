@@ -4,7 +4,7 @@ const { decodeToken } = require('../middlewares/jwt');
 const projectRouter = express.Router();
 
 projectRouter.use(decodeToken);
-projectRouter.post('/addproject',decodeToken,addProject);
+projectRouter.post('/addproject',addProject);
 projectRouter.get('/projects',listProjects)
 
 module.exports = projectRouter;    

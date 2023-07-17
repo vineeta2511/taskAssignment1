@@ -1,6 +1,8 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const getUser = async (req, res) => {
     const user_info = await User.find();
@@ -19,8 +21,8 @@ const getUsrById = async (req, res) => {
 
 const signupUser = async (req, res) => {
     try {
-        const { email, password, role } = req.body;
-        if (!email || !password || !role) {
+        const { username, email, password, role } = req.body;
+        if (!username || !email || !password || !role) {
             res.status(400);
             throw new Error('All fields are required.')
         }
@@ -28,13 +30,18 @@ const signupUser = async (req, res) => {
         if (existingUser) {
             return res.status(409).json({ message: 'Email already exists' });
         }
-        console.log(email, password, role)
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new User({ email, password: hashedPassword, role });
-        await user.save();
+        const user = await User.create({ username, email, password: hashedPassword, role });
+        if (user) {
+            res.status(201).json({ _id: user.id, email: user.email, role: user.role });
+        } else {
+            res.status(400);
+            throw new Error('User not valid')
+        }
+        res.json({ message: "SignUp successfully." })
 
-        res.status(201).json({ message: 'Signup successfully' });
     } catch (err) {
         console.log(err)
         res.status(500).json({ errorMessage: 'Failed to SignUp.' });
@@ -66,13 +73,13 @@ const loginUser = async (req, res) => {
         const accessToken = jwt.sign(
             {
                 user: {
-                    id:user._id,
+                    id: user._id,
                     email: user.email,
                     role: user.role
 
                 },
             },
-            "SECURED_KEY", { expiresIn: '1h' });
+            process.env.SECRET_KEY, { expiresIn: '1h' });
         res.status(200).json({ accessToken: accessToken });
         console.log("Token:", accessToken);
     } catch (err) {
@@ -80,9 +87,38 @@ const loginUser = async (req, res) => {
     }
 }
 
-const currentUser = async (req, res) => {
-    res.json(req.user);
-  };
+const updateUser = async (req, res) => {
+    try {
+        const user_info = await User.findById(req.params.id)
+        if (!user_info) {
+            res.status(404)
+            throw new Error("User is not found")
+        }
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        )
+        res.status(200).json({ message: 'User updated Successfully' })
+    } catch (error) {
+
+    }
+}
+
+const deleteUser = async (req, res) => {
+    try {
+        const user_info = await User.findById(req.params.id)
+        if (!user_info) {
+            res.status(404)
+            throw new Error("User is not found")
+        }
+        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'User deleted successfully' })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 
-module.exports = { getUser, getUsrById, signupUser, loginUser, currentUser };
+module.exports = { getUser, getUsrById, signupUser, loginUser, updateUser, deleteUser };

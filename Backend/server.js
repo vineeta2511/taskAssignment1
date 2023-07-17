@@ -1,5 +1,5 @@
+const dotenv = require("dotenv").config();
 const express = require('express');
-const cors = require('cors');
 const connectDb = require('./config/dbConnection');
 const userRouter = require('./Routes/userRoutes')
 const techRouter = require('./Routes/techRoutes');
@@ -13,7 +13,7 @@ app.use('/api', techRouter)
 app.use('/api', projectRouter)
 
 connectDb();
-const port = 4002;
-app.listen(port, () =>
-    console.log(`Server is running on http://localhost:${port}`)
-)
+const PORT = process.env.PORT ;
+app.listen(PORT, () =>
+    console.log(`Server is running on http://localhost:${PORT}`)
+) 

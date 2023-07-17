@@ -11,7 +11,7 @@ const addTech = async (req, res) => {
     try {
         const { name, status } = req.body;
         const imageUrl = req.file.path;
-        let resources = req.body.resources || []
+        let resources = req.body.resource
         // if (Array.isArray(req.body.resources)) {
         //     resources = req.body.resources.map((resource) => {
         //         { link: resource };
@@ -19,7 +19,7 @@ const addTech = async (req, res) => {
         // } else if (req.body.resources) {
         //     const resourcesLinks = req.body.resources.split(',');
         //     resources = resourcesLinks.map((resource) => {
-        //         { link: resource.trim() }
+        //         { link: resource.trim() }  
         //     })
         // }
 
@@ -27,9 +27,10 @@ const addTech = async (req, res) => {
         const technology = new Technology({
             name,
             image: imageUrl,
-            resources,            status,
+            resources,
+            status,
         });
-        console.log("resources", resources)
+        console.log("resources", technology)
         await technology.save();
 
         res.status(201).json({ message: 'Technology added successfully' });
@@ -39,5 +40,8 @@ const addTech = async (req, res) => {
     }
 };
 
+const updateTech =  async (res,req) =>{
+
+}
 
 module.exports = { getTech, addTech }
