@@ -1,6 +1,6 @@
 const Project = require('../models/projectModel');
 const nodemailer = require('nodemailer');
-const { decodeToken } = require('../middlewares/jwt');
+
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -56,8 +56,8 @@ const addProject = async (req, res) => {
 
 const listProjects = async (req, res) => {
     try {
-
         const { role, _id, email } = req.user;
+        console.log("user")
         let query;
         if (role === 'mentor') {
             query = { createdBy: _id };
@@ -65,7 +65,7 @@ const listProjects = async (req, res) => {
         else if (role === 'employee') {
             query = { members: email }
         }
-
+        console.log('Query:', query)
         const projects = await Project.find(query);
 
         if (projects.length === 0) {
@@ -81,13 +81,48 @@ const listProjects = async (req, res) => {
         res.status(200).json({ projects });
 
     }
-    catch (error) {
-        console.error(error);
+    catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Internal server error' });
 
     }
 }
 
+const updateProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, requirements, timeline, startDate, endDate, documents, members, technologyStack } = req.body;
+
+        const updatedProject = await Project.findByIdAndUpdate(id,
+            {
+                title, requirements, timeline, startDate, endDate, documents, members, technologyStack
+            },
+            { new: true });
+        if (!updatedProject) {
+            res.status(404).json({ message: 'Project not found.' })
+        }
+        res.status(200).json({ message: 'Project updated successfully' });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Internal server error.' })
+    }
+};
+
+const deleteProject = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedProject = await Project.findByIdAndDelete(id);
+        if (!deletedProject) {
+            res.status(404).json({ message: 'Project no found.' })
+        }
+        res.status(200).json({ message: 'Project deleted succesfully' });
+    }
+    catch (err) {
+        res.status(500).json({ message: 'Internal server errror' })
+    }
+}
 
 
-module.exports = { addProject, listProjects };  
+
+module.exports = { addProject, listProjects, updateProject, deleteProject };  

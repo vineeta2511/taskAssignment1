@@ -4,32 +4,31 @@ const projectSchema = new mongoose.Schema({
 
     title: {
         type: String,
-        require: true,
+        required: true,
     },
     requirements: {
         type: String,
-        require: true,
+        required: true,
     },
     timeline: {
         type: String,
-        require: true,
+        required: true,
     },
     startDate: {
         type: Date,
-        require: true,
+        required: true,
     },
     endDate: {
         type: Date,
-        require: true,
+        required: true,
     },
     documents: [String],
     members: [String],
     technologyStack: [String],
-    // createdBy: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'User',
-    //     required: true,
-    // },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
 })
 
 const Project = mongoose.model('Project', projectSchema);

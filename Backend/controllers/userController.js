@@ -1,8 +1,20 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const randomString = require('randomstring');
 const dotenv = require('dotenv');
 dotenv.config();
+
+const importCryptoRandomString = async () => {
+    try {
+        const module = await import('crypto-random-string');
+        return module.default;
+    } catch (err) {
+        console.error('Error importing crypto-random-string:', err);
+        return null;
+    }
+};
 
 const getUser = async (req, res) => {
     const user_info = await User.find();
@@ -40,7 +52,7 @@ const signupUser = async (req, res) => {
             res.status(400);
             throw new Error('User not valid')
         }
-        res.json({ message: "SignUp successfully." })
+        // res.json({ message: "SignUp successfully." })
 
     } catch (err) {
         console.log(err)
@@ -49,7 +61,6 @@ const signupUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-
     try {
         const { email, password } = req.body;
         console.log("password", password)
@@ -80,13 +91,93 @@ const loginUser = async (req, res) => {
                 },
             },
             process.env.SECRET_KEY, { expiresIn: '1h' });
+        res.cookie('access_token', token, {
+            maxAge: 300000, // 5min
+            httpOnly: true,
+            secure: true,
+        });
+
         res.status(200).json({ accessToken: accessToken });
-        console.log("Token:", accessToken);
+
     } catch (err) {
         res.status(500).json({ Error4: 'Failed to authenticate user' });
     }
 }
 
+const logoutUser = (req,res) =>{
+    res.clearCookies('access_token',{ httpOnly: true, secure: true });
+    res.status(200).json({ message: 'Logged out successfully' });
+}
+const updatePassword = async (req, res) => {
+    try {
+        const { email, password, newPassword } = req.body
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const passwordMatch = await bcrypt.compare(password, user.password);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect' });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
+
+    } catch (err) {
+        res.status(500).json({ errorMessage: 'Failed to update password' });
+    }
+}
+const forgetPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            res.status(400).json({ error: 'Email is mandatory!' });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+        }
+
+        const otp = randomString({ length: 6, type: 'numeric' });
+        user.resetOtp = otp;
+        user.resetOtpExpiration = Date.now() + 300000; //5 min in miliseconds
+        await user.save();
+
+        const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+                user: 'vvineeta2511@gmail.com',
+                pass: 'noprolhinjlueqwb',
+            },
+        });
+        const mailOptions = {
+            from: 'vvineeta2511@gmail.com',
+            to: user.email,
+            subject: 'Reset Password OTP',
+            text: `Your OTP to reset the password is: ${otp}.
+            It is valid for 5 min only`,
+        };
+        transporter.sendMail(mailOptions, (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ message: 'Error sending OTP' });
+            }
+
+            res.status(200).json({ message: 'OTP sent successfully' });
+        });
+
+    } catch (err) {
+        res.status(500).json({ errorMessage: 'Failed to generate OTP' });
+    }
+}
 const updateUser = async (req, res) => {
     try {
         const user_info = await User.findById(req.params.id)
@@ -121,4 +212,4 @@ const deleteUser = async (req, res) => {
 }
 
 
-module.exports = { getUser, getUsrById, signupUser, loginUser, updateUser, deleteUser };
+module.exports = { getUser, getUsrById, forgetPassword, updatePassword, signupUser, loginUser,logoutUser, updateUser, deleteUser };

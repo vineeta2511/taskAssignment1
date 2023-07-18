@@ -7,6 +7,15 @@ const getTech = async (req, res) => {
 
 }
 
+const getTechById = async (req, res) => {
+    const { id } = req.params;
+    const tech_info = await Technology.findById(id);
+    if (!tech_info) {
+        res.status(404).json({ message: 'Technology not found' })
+    }
+    res.status(200).json(tech_info);
+}
+
 const addTech = async (req, res) => {
     try {
         const { name, status } = req.body;
@@ -40,8 +49,42 @@ const addTech = async (req, res) => {
     }
 };
 
-const updateTech =  async (res,req) =>{
+const updateTech = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, status } = req.body;
+        const imageUrl = req.file.path;
+        const resources = req.body.resource;
 
+        const updatedTechnology = await Technology.findByIdAndUpdate(id,
+            {
+                name,
+                image: imageUrl,
+                resources,
+                status
+            }, { new: true }
+        );
+        if (updatedTechnology) {
+            res.status(404).json({ message: 'Tecchnology not found.' })
+        }
+        res.status(200).json({ message: 'technology updated succesfully.' })
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 }
+const deleteTech = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedTechnology = await Technology.findByIdAndDelete(id);
 
-module.exports = { getTech, addTech }
+        if (!deletedTechnology) {
+            res.status(404).json({ mesaage: 'Technology not found.' })
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' })
+    }
+}
+module.exports = { getTech, addTech, updateTech, deleteTech, getTechById }
+
