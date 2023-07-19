@@ -1,19 +1,21 @@
 const express = require('express');
 const userRouter = express.Router();
-const { signupUser, loginUser, getUser, getUsrById, updateUser, deleteUser, forgetPassword, updatePassword, logoutUser } = require('../controllers/userController');
+const { signupUser, loginUser, getUser, getUsrById, updateUser, deleteUser, updatePassword, logoutUser, generateOtp, resetPassword } = require('../controllers/userController');
 
+const paginatedResults = require('../middlewares/pagination');
 
-
-userRouter.get('/', getUser);
+userRouter.get('/', paginatedResults, getUser);
 userRouter.get('/:id', getUsrById);
+
 
 userRouter.post('/login', loginUser);
 userRouter.post('/signup', signupUser);
-userRouter.post('/generate-otp', forgetPassword);
-userRouter.post('/logout',logoutUser)
+userRouter.post('/generate-otp', generateOtp);
+userRouter.post('/logout', logoutUser)
+userRouter.post('/reset', resetPassword)
 
 userRouter.put('/:id', updateUser);
-userRouter.put('/updatepassward', updatePassword)
+userRouter.post('/updatepassword', updatePassword)
 
 userRouter.delete('/:id', deleteUser);
 

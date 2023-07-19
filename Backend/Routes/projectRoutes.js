@@ -1,6 +1,6 @@
 const express = require('express');
 const { addProject,listProjects, updateProject, deleteProject } = require('../controllers/projectController');
-const { decodeToken } = require('../middlewares/jwt');
+const { decodeToken } = require('../middlewares/validateTokenHandler');
 const projectRouter = express.Router();
 
 projectRouter.use(decodeToken);

@@ -3,21 +3,21 @@ const mongoose = require('mongoose');
 const empSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: [true, "Enter your name"],
+        required: false,
     },
     email: {
         type: String,
-        required: [true, 'Enter your EMAIL'],
+        required: true,
         unique: true
     },
     password: {
         type: String,
-        required: [true, 'Enter your PASSWORD']
+        required: true,
     },
     role: {
         type: String,
         enum: ['mentor', 'employee'],
-        required: [true, 'SELECT your ROLE']
+        required: true,
     },
     resetOtp: {
         type: String,
