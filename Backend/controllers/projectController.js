@@ -1,3 +1,4 @@
+const paginatedResults = require('../middlewares/pagination');
 const Project = require('../models/projectModel');
 const nodemailer = require('nodemailer');
 
@@ -59,14 +60,17 @@ const listProjects = async (req, res) => {
         const { role, _id, email } = req.user;
         console.log("user")
         let query;
+
         if (role === 'mentor') {
             query = { createdBy: _id };
         }
         else if (role === 'employee') {
             query = { members: email }
         }
-        console.log('Query:', query)
-        const projects = await Project.find(query);
+        
+        const paginatedProjects = await paginatedResults(Project,req.query.search,req.query.sortFiels,req.query.sortOrder)(req,res);
+        const projects = paginatedProjects.data;
+        
 
         if (projects.length === 0) {
             let message;
@@ -77,8 +81,14 @@ const listProjects = async (req, res) => {
             }
             return res.status(200).json({ message, projects });
         }
+        res.paginationResults = {
+            currentPage: paginatedProjects.currentPage,
+            totalPages: paginatedProjects.totalPages,
+            totalItems: paginatedProjects.totalItems,
+            data: projects,
+        };
 
-        res.status(200).json({ projects });
+        
 
     }
     catch (err) {
