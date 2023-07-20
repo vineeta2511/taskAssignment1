@@ -1,10 +1,11 @@
 const express = require('express');
 const userRouter = express.Router();
+const User = require('../models/userModel')
 const { signupUser, loginUser, getUser, getUsrById, updateUser, deleteUser, updatePassword, logoutUser, generateOtp, resetPassword } = require('../controllers/userController');
 
 const paginatedResults = require('../middlewares/pagination');
 
-userRouter.get('/', paginatedResults, getUser);
+userRouter.get('/',paginatedResults(User), getUser);
 userRouter.get('/:id', getUsrById);
 
 

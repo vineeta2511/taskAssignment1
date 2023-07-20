@@ -1,42 +1,26 @@
-// pagination.middleware.js
-const { searchByProject, searchByTechnology, sortBy, filterByDate } = require('../dataFilters')
-
 const paginatedResults = (model) => {
     return async (req, res, next) => {
+        const page = parseInt(req.query.page);
+        const limit = parseInt(req.query.limit);
+        const skip = (page - 1) * limit;
         try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 1;
-            const skip = (page - 1) * limit;
+            const totalItems = await model.countDocuments();
+            const totalPages = Math.ceil(totalItems / limit);
 
-            let query = {};
+            const data = await model.find().skip(skip).limit(limit);
 
-            searchByProject(query, req.query.project);
-            searchByTechnology(query, req.query.technology);
-
-            let sort = {};
-            sortBy(sort, req.query.sortBy, req.query.order);
-
-
-            filterByDate(query, req.query);
-
-            const total = await model.countDocuments(query);
-            const totalPages = Math.ceil(total / limit);
-
-            const data = await model.find(query).sort(sort).skip(skip).limit(limit);
-
-            res.paginatedResults = {
-                data,
-                page,
-                limit,
+            res.paginationResults = {
+                currentPage: page,
                 totalPages,
-                total,
+                totalItems,
+                data
             };
-
+        
             next();
         } catch (err) {
-            res.status(500).json({ error: 'Failed to paginate results' });
+            console.log(err)
+            res.status(500).json({ message: "Internal server error." })
         }
-    };
-};
-
+    }
+}
 module.exports = paginatedResults;

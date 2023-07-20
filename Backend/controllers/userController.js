@@ -8,9 +8,10 @@ dotenv.config();
 
 
 const getUser = async (req, res) => {
-    const user_info = await User.find();
+    res.json(res.paginationResults);
+    // const user_info = await User.find();
 
-    res.status(200).json(user_info)
+    // res.status(200).json(user_info)
 };
 
 const getUsrById = async (req, res) => {
