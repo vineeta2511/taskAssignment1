@@ -1,8 +1,8 @@
 const express = require('express');
 const techRouter = express.Router();
-const multer = require('multer');
-const { addTech, getTech, updateTech, deleteTech } = require('../controllers/techController');
 
+const { getTech, addTech, updateTech, getTechById, deleteTech } = require('../controllers/techController');
+const multer = require('multer');
 const Technology = require('../models/techModel');
 const paginatedResults = require('../middlewares/pagination')
 
@@ -17,9 +17,14 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
 techRouter.post('/addtech', upload.single('image'), addTech);
+
 techRouter.get('/viewtech',paginatedResults(Technology), getTech);
+techRouter.get('/tech/:id', getTechById);
+
 techRouter.put('/updatetech/:id', upload.single('image'), updateTech);
-techRouter.delete('/deltech/:id', deleteTech);
+techRouter.delete('/deletetech/:id', deleteTech);
+
 module.exports = techRouter;
 

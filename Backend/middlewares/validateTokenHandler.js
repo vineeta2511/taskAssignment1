@@ -10,8 +10,10 @@ const decodeToken = async (req, res, next) => {
     //const token = authHeader.split(" ")[1];
     jwt.verify(authHeader, process.env.SECRET_KEY, (err, decoded) => {
       if (err) { 
+        console.log("err:",err);
         res.status(401);
         throw new Error('Unauthorized');
+       
       }
       req.user = decoded.user;
       next();

@@ -8,12 +8,12 @@ const projectRouter = require('./Routes/projectRoutes')
 const app = express();
 app.use(express.json());
 
-app.use('/api', userRouter)
-app.use('/api', techRouter)
-app.use('/api', projectRouter)
+app.use('/user', userRouter)
+app.use('/tech',techRouter)
+app.use('/project', projectRouter)
 
 connectDb();
-const PORT = process.env.PORT ;
+const PORT = 4002;
 app.listen(PORT, () =>
     console.log(`Server is running on http://localhost:${PORT}`)
-) 
+)   

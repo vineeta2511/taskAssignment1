@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const Technology = require('../models/techModel')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -8,20 +9,27 @@ dotenv.config();
 
 
 const getUser = async (req, res) => {
-    res.json(res.paginationResults);
-    // const user_info = await User.find();
-
-    // res.status(200).json(user_info)
-};
-
-const getUsrById = async (req, res) => {
-    const user_info = await User.findById(req.params.id)
-    if (!user_info) {
-        res.status(404)
-        throw new Error("User is not found")
+    try {
+        res.json(res.paginationResults);
+    } catch (err) {
+        console.log('Error Message:', err);
+        res.status(500);
+        throw new Error(err.message);
     }
-    res.status(200).json(user_info)
 };
+
+// const getUsrById = async (req, res) => {
+//     try {
+//         const user_info = await User.findById(req.params.id)
+//         if (!user_info) {
+//             res.status(404);
+//             throw new Error("User is not found.")
+//         }
+//         res.status(200).json(user_info)
+//     } catch (err) {
+//         res.status(500).json({ Message12: "Internal server error" })
+//     }
+// };
 
 const signupUser = async (req, res) => {
     try {
@@ -32,7 +40,7 @@ const signupUser = async (req, res) => {
         }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ Message: 'User already exists' });
+            res.status(400).json({ Message: 'User already exists' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -216,7 +224,7 @@ const updateUser = async (req, res) => {
         res.status(200).json({ Message: 'User updated Successfully' })
     } catch (err) {
         console.error(err);
-        res.status(500).json({ Message: 'Internal server error' });
+        res.status(500).json({ Message2: 'Internal server error' });
     }
 }
 
@@ -224,24 +232,17 @@ const deleteUser = async (req, res) => {
     try {
         const user_info = await User.findById(req.params.id)
         if (!user_info) {
-            res.status(404)
-            throw new Error("User is not found")
+            res.status(404);
+            throw new Error("User is not found.")
         }
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
-        res.status(200).json({ Message: 'User deleted successfully' })
+        await User.findByIdAndDelete(req.params.id);
+        res.status(200).json({ Message: 'User deleted successfully.' })
     } catch (err) {
         console.error(err);
-        res.status(500).json({ Message: 'Internal server error' });
+        res.status(500).json({ Message3: 'Internal server error.' });
     }
 }
 
-// const currentUser = async (req, res) => {
-//    try{
-//     res.json(req.user.accessToken); 
-//    }
-//    catch(err){
-//     res.status(500).json({Message: 'Internal server error'})
-//    }
-// }
 
-module.exports = { getUser, getUsrById, generateOtp, resetPassword, updatePassword, signupUser, loginUser, logoutUser, updateUser, deleteUser };
+
+module.exports = { getUser, generateOtp, resetPassword, updatePassword, signupUser, loginUser, logoutUser, updateUser, deleteUser};
