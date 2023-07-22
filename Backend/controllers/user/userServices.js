@@ -1,18 +1,11 @@
-const User = require('../models/userModel');
-const Technology = require('../models/techModel')
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-const randomString = require('randomstring');
-const dotenv = require('dotenv');
-dotenv.config();
+const User = require('../../models/userModel');
 
 
 const getUser = async (req, res) => {
     try {
         res.json(res.paginationResults);
     } catch (err) {
-        console.log('Error Message:', err);
+        console.log('Error Message in gettind User data:', err);
         res.status(500);
         throw new Error(err.message);
     }
@@ -35,27 +28,25 @@ const signupUser = async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
         if (!username || !email || !password || !role) {
-            res.status(400);
             throw new Error('All fields are required.')
         }
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            res.status(400).json({ Message: 'User already exists' });
+            throw new Error('User already exists');
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({ username, email, password: hashedPassword, role });
         if (user) {
-            res.status(201).json({ _id: user.id, email: user.email, role: user.role });
+            return { _id: user.id, email: user.email, role: user.role };
         } else {
-            res.status(400);
+
             throw new Error('User not valid')
         }
-        // res.json({ Message: "SignUp successfully." })
 
     } catch (err) {
-        console.log(err)
+        console.log("Error in SignUp process", err)
         res.status(500).json({ errorMessage: 'Failed to SignUp.' });
     }
 };
@@ -63,14 +54,12 @@ const signupUser = async (req, res) => {
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        //console.log("password", password)
-
         if (!email || !password) {
-            res.status(400).json({ error1: 'All fields are mandatory!' });
+            throw new Error('All fields are mandatory!');
         }
 
         const user = await User.findOne({ email });
-        //console.log("user",user.email);
+
         if (!user) {
             res.status(401).json({ error2: 'Email or password is not valid' });
         }
@@ -135,6 +124,7 @@ const updatePassword = async (req, res) => {
         res.status(500).json({ Message: 'Failed to update password' });
     }
 }
+
 const generateOtp = async (req, res) => {
     try {
         const { email } = req.body;
@@ -243,6 +233,4 @@ const deleteUser = async (req, res) => {
     }
 }
 
-
-
-module.exports = { getUser, generateOtp, resetPassword, updatePassword, signupUser, loginUser, logoutUser, updateUser, deleteUser};
+module.exports = { getUser, signupUser, loginUser, updatePassword, logoutUser, resetPassword, updateUser, deleteUser }

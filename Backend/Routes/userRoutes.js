@@ -1,7 +1,7 @@
 const express = require('express');
 const userRouter = express.Router();
 const User = require('../models/userModel')
-const { signupUser, loginUser, getUser, updateUser, deleteUser, updatePassword, logoutUser, generateOtp, resetPassword} = require('../controllers/userController');
+const { signupUser, loginUser, getUser, updateUser, deleteUser, updatePassword, logoutUser, generateOtp, resetPassword} = require('../controllers/user/userController');
 
 const paginatedResults = require('../middlewares/pagination');
 
