@@ -1,19 +1,20 @@
 const User = require('../../models/userModel');
 const randomString = require('randomstring');
-const { hashedPassword, comparePassword } = require('../../utils/tokenUtils');
-const { generateAccessToken } = require('../../utils/tokenUtils');
+const { hashedPassword, comparePassword } = require('../../utils/passwordUtils');
 const { mailSender } = require('../../utils/nodemailer')
+const paginatedResults = require('../../middlewares/pagination')
 
-
-const getUser = async (paginationResults) => {
+const getUser = async () => {
     try {
-        res.json(paginationResults);
+        const user = await User.find();
+        return URLSearchParams;
     } catch (error) {
         console.log('Error Message in getting User data:', error);
-        res.status(500);
         throw new Error(err.message);
     }
 };
+
+const getPaginatedUsers = paginatedResults(User);
 
 // const getUsrById = async (req, res) => {
 //     try {
@@ -37,7 +38,7 @@ const signupUser = async (username, email, password, role) => {
         throw new Error('User already exists');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    //const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({ username, email, password: hashedPassword, role });
     if (user) {
@@ -47,7 +48,7 @@ const signupUser = async (username, email, password, role) => {
     }
 };
 
-const loginUser = async (email, password) => {
+const loginUser = async ({ email, password }) => {
 
     if (!email || !password) {
         throw new Error('All fields are mandatory!');
@@ -58,7 +59,7 @@ const loginUser = async (email, password) => {
         res.status(401).json({ error2: 'Email or password is not valid' });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await comparePassword();
 
     if (!passwordMatch) {
         res.status(401).json({ error3: 'Email or password is not valid' })
@@ -81,13 +82,7 @@ const loginUser = async (email, password) => {
     return { accessToken };
 }
 
-
-const logoutUser = (req, res) => {
-    res.clearCookie('access_token', { httpOnly: true, secure: true });
-    res.status(200).json({ Message: 'Logged out successfully' });
-}
-
-const updatePassword = async (email, password, newPassword) => {
+const updatePassword = async ({ email, password, newPassword }) => {
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -104,14 +99,12 @@ const updatePassword = async (email, password, newPassword) => {
     user.password = hashedNewPassword;
     await user.save();
 
-    res.status(200).json({ Message: 'Password updated successfully' });
+}
 
-
-
-    const generateOtp = async (email) => {
-        try {
+const generateOtp = async (email) => {
+    try {
         if (!email) {
-            rror: 'Email is mandatory!'
+            throw new Error('Email is mandatory!');
         };
 
         const user = await User.findOne({ email });
@@ -131,18 +124,19 @@ const updatePassword = async (email, password, newPassword) => {
             to: user.email,
             subject: 'Reset Password OTP',
             text: `Your OTP to reset the password is: ${otp}.
-            It is valid for 5 min only`,
+                It is valid for 5 min only.`,
         };
-       await mailSender.sendMail(mailOptions);
-            console.log('OPT email sent succesfully.');
-        } catch (error) {
-            console.log('Error sending OTP email:', err);
-            throw new Error('Fialed to send OTP');
-        }
+        await mailSender.sendMail(mailOptions);
+        console.log('OPT email sent succesfully.');
+        return { Message: "OPT email sent succesfully." }
+    } catch (error) {
+        console.log('Error sending OTP email:', err);
+        throw new Error('Fialed to send OTP');
     }
 }
 
-const resetPassword = async (req, res) => {
+
+const resetPassword = async ({ email, }) => {
     try {
         const { email, otp, newPassword } = req.body;
         const user = await User.findOne({ email });
@@ -151,13 +145,11 @@ const resetPassword = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         if (user.resetOtp !== otp || Date.now() > user.resetOtpExpiration) {
-
-            res.status(401).json({ error: 'Invalid or expired OTP' });
+            throw new Errro('Invalid or expired OTP');
         }
+
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
         user.password = hashedNewPassword;
-
         user.resetOtp = null;
         user.resetOtpExpiration = null;
         await user.save();
@@ -167,33 +159,31 @@ const resetPassword = async (req, res) => {
     }
 }
 
-const updateUser = async (req, res) => {
+const updateUser = async (id, updateData) => {
     try {
-        const user_info = await User.findById(req.params.id)
+        const user_info = await User.findById(id)
         if (!user_info) {
-            res.status(404)
-            throw new Error("User is not found")
+            throw new Error("User is not found.")
         }
         const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            req.body,
+            id,
+            updateData,
             { new: true }
         )
-        res.status(200).json({ Message: 'User updated Successfully' })
+        return updatedUser;
     } catch (err) {
         console.error(err);
         res.status(500).json({ Message2: 'Internal server error' });
     }
 }
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (id) => {
     try {
-        const user_info = await User.findById(req.params.id)
+        const user_info = await User.findById(id)
         if (!user_info) {
-            res.status(404);
             throw new Error("User is not found.")
         }
-        await User.findByIdAndDelete(req.params.id);
+        await User.findByIdAndDelete(id);
         res.status(200).json({ Message: 'User deleted successfully.' })
     } catch (err) {
         console.error(err);
@@ -203,10 +193,11 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
     getUser,
+    getPaginatedUsers,
     signupUser,
     loginUser,
+    generateOtp,
     updatePassword,
-    logoutUser,
     resetPassword,
     updateUser,
     deleteUser
