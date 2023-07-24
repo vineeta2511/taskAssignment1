@@ -1,11 +1,15 @@
 const User = require('../../models/userModel');
+const randomString = require('randomstring');
+const { hashedPassword, comparePassword } = require('../../utils/tokenUtils');
+const { generateAccessToken } = require('../../utils/tokenUtils');
+const { mailSender } = require('../../utils/nodemailer')
 
 
-const getUser = async (req, res) => {
+const getUser = async (paginationResults) => {
     try {
-        res.json(res.paginationResults);
-    } catch (err) {
-        console.log('Error Message in gettind User data:', err);
+        res.json(paginationResults);
+    } catch (error) {
+        console.log('Error Message in getting User data:', error);
         res.status(500);
         throw new Error(err.message);
     }
@@ -24,114 +28,91 @@ const getUser = async (req, res) => {
 //     }
 // };
 
-const signupUser = async (req, res) => {
-    try {
-        const { username, email, password, role } = req.body;
-        if (!username || !email || !password || !role) {
-            throw new Error('All fields are required.')
-        }
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            throw new Error('User already exists');
-        }
+const signupUser = async (username, email, password, role) => {
+    if (!username || !email || !password || !role) {
+        throw new Error('All fields are required.')
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        throw new Error('User already exists');
+    }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await User.create({ username, email, password: hashedPassword, role });
-        if (user) {
-            return { _id: user.id, email: user.email, role: user.role };
-        } else {
-
-            throw new Error('User not valid')
-        }
-
-    } catch (err) {
-        console.log("Error in SignUp process", err)
-        res.status(500).json({ errorMessage: 'Failed to SignUp.' });
+    const user = await User.create({ username, email, password: hashedPassword, role });
+    if (user) {
+        return { _id: user.id, email: user.email, role: user.role };
+    } else {
+        throw new Error('User not valid')
     }
 };
 
-const loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            throw new Error('All fields are mandatory!');
-        }
+const loginUser = async (email, password) => {
 
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            res.status(401).json({ error2: 'Email or password is not valid' });
-        }
-
-        const passwordMatch = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatch) {
-            res.status(401).json({ error3: 'Email or password is not valid' })
-        }
-
-        const accessToken = jwt.sign(
-            {
-                user: {
-                    id: user._id,
-                    email: user.email,
-                    role: user.role
-                },
-            },
-            process.env.SECRET_KEY, { expiresIn: '1h' });
-        res.cookie('access_token', accessToken, {
-            maxAge: 300000, // 5min
-            httpOnly: true,
-            secure: true,
-        });
-
-        res.status(200).json({ accessToken: accessToken });
-
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ Error4: 'Failed to authenticate user' });
+    if (!email || !password) {
+        throw new Error('All fields are mandatory!');
     }
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(401).json({ error2: 'Email or password is not valid' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+        res.status(401).json({ error3: 'Email or password is not valid' })
+    }
+
+    const accessToken = jwt.sign(
+        {
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role
+            },
+        },
+        process.env.SECRET_KEY, { expiresIn: '1h' });
+    res.cookie('access_token', accessToken, {
+        maxAge: 300000, // 5min
+        httpOnly: true,
+        secure: true,
+    });
+    return { accessToken };
 }
+
 
 const logoutUser = (req, res) => {
     res.clearCookie('access_token', { httpOnly: true, secure: true });
     res.status(200).json({ Message: 'Logged out successfully' });
 }
 
-const updatePassword = async (req, res) => {
-    try {
-        const { email, password, newPassword } = req.body;
-        const user = await User.findOne({ email });
+const updatePassword = async (email, password, newPassword) => {
+    const user = await User.findOne({ email });
 
-        if (!user) {
-            res.status(404).json({ error: 'User not found' });
-        }
-
-        const passwordMatch = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatch) {
-            res.status(401).json({ error: 'Current password is incorrect' });
-        }
-
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedNewPassword;
-        await user.save();
-
-        res.status(200).json({ Message: 'Password updated successfully' });
-
-    } catch (err) {
-        console.log("error", err)
-        res.status(500).json({ Message: 'Failed to update password' });
+    if (!user) {
+        throw new Error('User not found');
     }
-}
 
-const generateOtp = async (req, res) => {
-    try {
-        const { email } = req.body;
+    const passwordMatch = await bcrypt.compare(password, user.password);
 
+    if (!passwordMatch) {
+        throw new Error('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({ Message: 'Password updated successfully' });
+
+
+
+    const generateOtp = async (email) => {
+        try {
         if (!email) {
-            res.status(400).json({ error: 'Email is mandatory!' });
-        }
+            rror: 'Email is mandatory!'
+        };
 
         const user = await User.findOne({ email });
 
@@ -145,13 +126,6 @@ const generateOtp = async (req, res) => {
         user.resetOtpExpiration = Date.now() + 600000; //10 min in milliseconds
         await user.save();
 
-        const transporter = nodemailer.createTransport({
-            service: 'Gmail',
-            auth: {
-                user: 'vvineeta2511@gmail.com',
-                pass: 'noprolhinjlueqwb',
-            },
-        });
         const mailOptions = {
             from: 'vvineeta2511@gmail.com',
             to: user.email,
@@ -159,18 +133,12 @@ const generateOtp = async (req, res) => {
             text: `Your OTP to reset the password is: ${otp}.
             It is valid for 5 min only`,
         };
-        transporter.sendMail(mailOptions, (err) => {
-            if (err) {
-                console.error(err);
-                res.status(500).json({ Message: 'Error sending OTP' });
-            }
-
-            res.status(200).json({ Message: 'OTP sent successfully' });
-        });
-
-    } catch (err) {
-        console.error("err", err);
-        res.status(500).json({ Message: 'Failed to generate OTP' });
+       await mailSender.sendMail(mailOptions);
+            console.log('OPT email sent succesfully.');
+        } catch (error) {
+            console.log('Error sending OTP email:', err);
+            throw new Error('Fialed to send OTP');
+        }
     }
 }
 
@@ -233,4 +201,13 @@ const deleteUser = async (req, res) => {
     }
 }
 
-module.exports = { getUser, signupUser, loginUser, updatePassword, logoutUser, resetPassword, updateUser, deleteUser }
+module.exports = {
+    getUser,
+    signupUser,
+    loginUser,
+    updatePassword,
+    logoutUser,
+    resetPassword,
+    updateUser,
+    deleteUser
+}
