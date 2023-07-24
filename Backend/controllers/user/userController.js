@@ -33,7 +33,7 @@ const getUserController = async (req, res) => {
 const signupUserController = async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
-        const user = await signupUser({ username, email, password: hashedPassword, role });
+        const user = await signupUser({ username, email, password, role });
         res.status(201).json({ _id: user._id, email: user.email, role: user.role })
     }
     catch (error) {

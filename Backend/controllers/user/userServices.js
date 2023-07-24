@@ -1,6 +1,7 @@
 const User = require('../../models/userModel');
 const randomString = require('randomstring');
-const { hashedPassword, comparePassword } = require('../../utils/passwordUtils');
+const { hashPassword, comparePassword } = require('../../utils/passwordUtils');
+//const { generateAccessToken } = require('../../utils/tokenUtils');
 const { mailSender } = require('../../utils/nodemailer')
 const paginatedResults = require('../../middlewares/pagination')
 
@@ -29,7 +30,8 @@ const getPaginatedUsers = paginatedResults(User);
 //     }
 // };
 
-const signupUser = async (username, email, password, role) => {
+const signupUser = async (userData) => {
+    const {username, email, password, role} = userData;
     if (!username || !email || !password || !role) {
         throw new Error('All fields are required.')
     }
@@ -38,7 +40,7 @@ const signupUser = async (username, email, password, role) => {
         throw new Error('User already exists');
     }
 
-    //const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const user = await User.create({ username, email, password: hashedPassword, role });
     if (user) {
@@ -56,30 +58,31 @@ const loginUser = async ({ email, password }) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-        res.status(401).json({ error2: 'Email or password is not valid' });
+        throw new Error('Email or password is not valid');
     }
 
-    const passwordMatch = await comparePassword();
+    const passwordMatch = await comparePassword(password,user.password);
 
     if (!passwordMatch) {
-        res.status(401).json({ error3: 'Email or password is not valid' })
+        throw new Error ('Email or password is not valid' );
     }
 
-    const accessToken = jwt.sign(
-        {
-            user: {
-                id: user._id,
-                email: user.email,
-                role: user.role
-            },
-        },
-        process.env.SECRET_KEY, { expiresIn: '1h' });
-    res.cookie('access_token', accessToken, {
-        maxAge: 300000, // 5min
-        httpOnly: true,
-        secure: true,
-    });
-    return { accessToken };
+    return user;
+    // const accessToken = generateAccessToken(
+    //     {
+    //         user: {
+    //             id: user._id,
+    //             email: user.email,
+    //             role: user.role
+    //         },
+    //     },
+    //     process.env.SECRET_KEY, { expiresIn: '1h' });
+    // res.cookie('access_token', accessToken, {
+    //     maxAge: 300000, // 5min
+    //     httpOnly: true,
+    //     secure: true,
+    // });
+    // return { accessToken };
 }
 
 const updatePassword = async ({ email, password, newPassword }) => {
