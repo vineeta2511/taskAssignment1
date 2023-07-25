@@ -2,7 +2,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const { getUser,
-    getPaginatedUsers,
     signupUser,
     loginUser,
     generateOtp,
@@ -14,16 +13,11 @@ const { generateAccessToken } = require('../../utils/tokenUtils');
 
 const getUserController = async (req, res) => {
     try {
-        if (req.query.page && req.query.limit) {
-            return getPaginatedUsers(req, res, () => {
-                res.json(res.getPaginatedResults);
-            })
+        res.json(res.paginatedResults);
+            // const users = await getUser();
+            // res.json({ users})
         }
-        else {
-            const users = await getUser();
-            res.json({ users })
-        }
-    } catch (error) {
+    catch (error) {
         console.log('Error Message in getting User data:', err);
         res.status(500);
         res.json({ error: err.message });
@@ -76,7 +70,7 @@ const updatePasswordController = async (req, res) => {
         console.error('Error in Updating password:', error);
         res.status(500).json({ Message: 'Failed to update password.' })
     }
-};
+};  
 
 const generateOtpContoller = async (req, res) => {
     try {
@@ -95,6 +89,7 @@ const resetPasswordController = async (req, res) => {
         await resetPassword({ email, otp, newPassword });
         res.status(200).json({ Message: 'Password reset successfully.' })
     } catch (error) {
+        console.log("Error in reset password:",error);
         res.status(500).json({ Mesaage: 'Failed to reset password.' })
     }
 };

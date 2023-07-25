@@ -1,15 +1,15 @@
 const dotenv = require("dotenv").config();
 const express = require('express');
-const connectDb = require('./config/dbConnection2');
+const connectDb = require('./config/dbConnection.js');
 const userRouter = require('./Routes/userRoutes')
-//const techRouter = require('./Routes/techRoutes');
+const techRouter = require('./Routes/techRoutes');
 const projectRouter = require('./Routes/projectRoutes')
 
 const app = express();
 app.use(express.json());
 
 app.use('/user', userRouter)
-//app.use('/tech',techRouter)
+app.use('/tech',techRouter)
 app.use('/project', projectRouter)
 
 connectDb();

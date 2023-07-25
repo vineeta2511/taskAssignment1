@@ -8,18 +8,18 @@ const paginatedResults = (model) => {
         try {
             const totalItems = await model.countDocuments();
             const itemsOnPage = Math.ceil(totalItems / limit);
-            const data = await model.find().skip(skip).limit(limit)
+            const data = await model.find().skip(skip).limit(limit);
             res.paginationResults = {
                 currentPage: page,
                 itemsOnPage,
                 totalItems,
                 data
             };
-
+            //console.log("object:",paginationResults);
             next();
-        } catch (err) {
-            console.log(err)
-            res.status(500).json({ message: "Internal server error." })
+        } catch (error) {
+            console.log(error)
+            res.status(500).json({ Message: "Internal server error." })
         }
     }
 }

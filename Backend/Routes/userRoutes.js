@@ -16,7 +16,7 @@ const paginatedResults = require('../middlewares/pagination');
 userRouter.get('/viewuser', paginatedResults(User), getUserController);
 //userRouter.get('/:id', getUsrById);
 
-
+  
 userRouter.post('/login', loginUserController);
 userRouter.post('/signup', signupUserController);
 userRouter.post('/generate-otp', generateOtpContoller);
