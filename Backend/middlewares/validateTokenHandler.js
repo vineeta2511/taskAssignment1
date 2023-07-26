@@ -1,28 +1,31 @@
-const jwt = require('jsonwebtoken')
-const dotenv = require('dotenv');
+const jwt = require("jsonwebtoken");
+const dotenv = require("dotenv");
 dotenv.config();
 
-const verifyToken = async (req, res, next) => {
+const verifyToken = (req, res, next) => {
   try {
+    let authHeader = req.headers.Authorization || req.headers.authorization;
+    if (!authHeader) {
+      res.status(401);
+      throw new Error("Unauthorized: No token provided.");
+    }
 
-    let authHeader = req.headers.Authorization || req.headers.authorization
     const token = authHeader.split(" ")[1];
-    console.log("object",token);
-    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-      if (err) { 
-        console.log("err:",err);
+
+    jwt.verify(token, process.env.SECRETKEY, (err, decoded) => {
+      if (err) {
+        console.log("err:", err);
         res.status(401);
-        throw new Error('Unauthorized');
-       
+        throw new Error("Unauthorized: Invalid Token.");
       }
       req.user = decoded.user;
+
       next();
-    })
-  }
-  catch (err) {
-    console.error(err);
-    res.status(401).json({ errormessage: 'Unauthorized' });
+    });
+  } catch (error) {
+    console.error("Error1:", error.message);
+    res.status(401).json({ errorMessage: "Unauthorized" });
   }
 };
 
-module.exports =  verifyToken ;
+module.exports = verifyToken;

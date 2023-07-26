@@ -21,7 +21,7 @@ const upload = multer({ storage });
 techRouter.post('/addtech', upload.single('image'), addTechController);
 
 techRouter.get('/viewtech',paginatedResults(Technology), getTechController);
-techRouter.get('/tech/:id', getTechByIdController);
+techRouter.get('/viewtech/:id', getTechByIdController);
 
 techRouter.put('/updatetech/:id', upload.single('image'), updateTechController);
 techRouter.delete('/deletetech/:id', deleteTechContoller);

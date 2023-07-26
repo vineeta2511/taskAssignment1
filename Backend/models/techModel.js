@@ -1,9 +1,9 @@
 
 const mongoose = require('mongoose');
-mongoose.set("debug", true);
-mongoose.set('autoCreate', false)
-mongoose.set('autoIndex',false);
-
+// mongoose.set("debug", true);
+// mongoose.set('autoCreate', false)
+// mongoose.set('autoIndex',false);
+// 
 // const resourceSchema = mongoose.Schema({
 //   link: {
 //     type: String,
@@ -18,7 +18,7 @@ const technologySchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true
+    required: false
   },
   // resources: {
   //   type:[resourceSchema]

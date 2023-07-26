@@ -18,7 +18,7 @@ const addProjectController = async (req, res) => {
 
         if (role == 'mentor') {
             const projectData = req.body;
-            const project = await this.addProject(projectData);
+            const project = await addProjects(projectData);
 
             const mailSend = {
                 from: "vvineeta2511@gmail.com",
@@ -42,7 +42,7 @@ const addProjectController = async (req, res) => {
         else {
             return res.status(403).json({ Message: 'Only mentor can add projects.' })
         }
-
+  
     } catch (error) {
         console.log("Error in adding a project.", error);
         res.status(500).json({ ErrorMessage: 'Internal server error' })

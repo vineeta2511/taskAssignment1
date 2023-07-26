@@ -1,13 +1,14 @@
 const User = require("../../models/userModel");
 const randomString = require("randomstring");
 const { hashPassword, comparePassword } = require("../../utils/passwordUtils");
-//const { generateAccessToken } = require('../../utils/tokenUtils');
+const { generateAccessToken } = require('../../utils/tokenUtils');
 const { sendMail } = require("../../utils/nodemailer");
 //const paginatedResults = require('../../middlewares/pagination')
 
 const getUser = async () => {
   try {
     const users = await User.find();
+    console.log(users)
     return users;
   } catch (error) {
     console.log("Error Message in getting User data:", error);
@@ -78,21 +79,6 @@ const loginUser = async ({ email, password }) => {
   }
 
   return user;
-  // const accessToken = generateAccessToken(
-  //     {
-  //         user: {
-  //             id: user._id,
-  //             email: user.email,
-  //             role: user.role
-  //         },
-  //     },
-  //     process.env.SECRET_KEY, { expiresIn: '1h' });
-  // res.cookie('access_token', accessToken, {
-  //     maxAge: 300000, // 5min
-  //     httpOnly: true,
-  //     secure: true,
-  // });
-  // return { accessToken };
 };
 
 const updatePassword = async ({ email, password, newPassword }) => {

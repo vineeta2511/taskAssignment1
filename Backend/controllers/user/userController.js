@@ -13,9 +13,9 @@ const { generateAccessToken } = require('../../utils/tokenUtils');
 
 const getUserController = async (req, res) => {
     try {
-        res.json(res.paginatedResults);
-            // const users = await getUser();
-            // res.json({ users})
+        //res.json(res.paginatedResults);
+            const users = await getUser();
+            res.json({ users})
         }
     catch (error) {
         console.log('Error Message in getting User data:', err);
@@ -40,26 +40,30 @@ const loginUserController = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await loginUser({ email, password });
-        const accessToken = generateAccessToken({
-            user: {
-                id: user._id,
-                email: user.email,
-                role: user.role,
-            }
-        })
-        res.status(200).json({ accessToken: accessToken });
+        const payload = {user: {
+            email:user.email,
+            role: user.role,}}
+        
+        const accessToken = await generateAccessToken(payload)
+            res.cookie('access_token', accessToken, {
+                    maxAge: 3600000, // 5min
+                    httpOnly: true,
+                    secure: true
+      })
+        res.status(200).json(accessToken);
+    
     }
     catch (error) {
         console.error(error);
         res.status(500).json({ errorMessage: 'Failed to Login.' })
-    }
+    }  
 }
 
 const logoutUserController = (req, res) => {
     res.clearCookie('access_token', { httpOnly: true, secure: true });
     res.status(200).json({ Message: 'Logged out successfully' });
 }
-
+  
 const updatePasswordController = async (req, res) => {
     try {
         const { email, password, newPassword } = req.body;

@@ -5,7 +5,7 @@ const{
 const getTechController = async (req, res) => {
     try {
       const technologies = await getTech();
-      res.status(200).json(technologies);
+      res.status(200).json({technologies});
     } catch (error) {
       console.log('Error Message:', error.message);
       res.status(500).json({ Message: 'Internal server error.' });
